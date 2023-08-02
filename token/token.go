@@ -3,6 +3,11 @@ package token
 // might change to int or byte in the future
 type TokenType string
 
+type Token struct {
+	Type    TokenType
+	Literal string
+}
+
 const (
 	ILLEGAL    = "ILLEGAL"
 	EOF        = "EOF"
