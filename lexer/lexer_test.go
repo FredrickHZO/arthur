@@ -20,7 +20,7 @@ func TestNextToken(t *testing.T) {
 		{token.RBRACE, "}"},
 		{token.COMMA, ","},
 		{token.SEMICOLON, ";"},
-		{token.WHITESPACE, "\n"},
+		{token.NEWLINE, "\n"},
 	}
 
 	l := NewLexer(input)
