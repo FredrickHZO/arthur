@@ -35,13 +35,25 @@ const (
 	// keywords
 	FUNCTION = "FUNCTION"
 	LET      = "LET"
+	IF       = "IF"
+	ELSE     = "ELSE"
+	FOR      = "FOR"
+	TRUE     = "TRUE"
+	FALSE    = "FALSE"
+	RETURN   = "RETURN"
 )
 
 // keeps track of the language keywords
 var keywords = map[string]TokenType{
-	"let": LET,
-	"fn":  FUNCTION,
-	"\n":  NEWLINE,
+	"let":    LET,
+	"fn":     FUNCTION,
+	"\n":     NEWLINE,
+	"if":     IF,
+	"else":   ELSE,
+	"for":    FOR,
+	"true":   TRUE,
+	"false":  FALSE,
+	"return": RETURN,
 }
 
 // checks if the identifier is present in the keywords table
