@@ -31,6 +31,10 @@ func (l *Lexer) readChar() {
 func (l *Lexer) lexIdentifier() string {
 	position := l.position
 	for isLetter(l.char) {
+		if l.position == len(l.input)-1 {
+			l.position = l.readPosition
+			break
+		}
 		l.readChar()
 	}
 	return l.input[position:l.position]
@@ -40,6 +44,10 @@ func (l *Lexer) lexIdentifier() string {
 func (l *Lexer) lexNumber() string {
 	startPos := l.position
 	for isDigit(l.char) {
+		if l.position == len(l.input)-1 {
+			l.position = l.readPosition
+			break
+		}
 		l.readChar()
 	}
 	return l.input[startPos:l.position]
