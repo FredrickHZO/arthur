@@ -8,7 +8,7 @@ type Token struct {
 	Literal string
 }
 
-// TODO: add floats and other symbols
+// TODO: add floats, hex, octal and other operators
 const (
 	ILLEGAL   = "ILLEGAL"
 	EOF       = "EOF"
@@ -27,19 +27,15 @@ const (
 	LET       = "LET"
 )
 
-// this table is useful to discern between user-defined
-// identifiers and keywords
+// keeps track of the language keywords
 var keywords = map[string]TokenType{
 	"let": LET,
 	"fn":  FUNCTION,
 	"\n":  NEWLINE,
 }
 
-// checks the table to see if the identifier is
-// a keyword of the language or a user-defined one.
-// If it's a keyword, it returns its TokenType constant
-// else we use IDENT which is the TokenType for
-// all user-defined identifiers
+// checks if the identifier is present in the keywords table
+// returns the correct TokenType if present, otherwise IDENT
 func LookupIdent(ident string) TokenType {
 	if item, ok := keywords[ident]; ok {
 		return item
