@@ -10,12 +10,21 @@ type Token struct {
 
 // TODO: add floats, hex, octal and other operators
 const (
-	ILLEGAL   = "ILLEGAL"
-	EOF       = "EOF"
-	IDENT     = "IDENT"
-	INT       = "INT"
-	ASSIGN    = "="
-	PLUS      = "+"
+	// identifiers & literals
+	ILLEGAL = "ILLEGAL"
+	EOF     = "EOF"
+	IDENT   = "IDENT"
+	INT     = "INT"
+	// operators
+	ASSIGN   = "="
+	PLUS     = "+"
+	MINUS    = "-"
+	BANG     = "!"
+	ASTERISK = "*"
+	SLASH    = "/"
+	LT       = "<"
+	RT       = ">"
+	// delimiters
 	COMMA     = ","
 	SEMICOLON = ";"
 	LPAREN    = "("
@@ -23,8 +32,9 @@ const (
 	LBRACE    = "{"
 	RBRACE    = "}"
 	NEWLINE   = "NEWLINE"
-	FUNCTION  = "FUNCTION"
-	LET       = "LET"
+	// keywords
+	FUNCTION = "FUNCTION"
+	LET      = "LET"
 )
 
 // keeps track of the language keywords
