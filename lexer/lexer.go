@@ -2,7 +2,6 @@ package lexer
 
 import (
 	"arthur/token"
-	"unicode"
 )
 
 type Lexer struct {
@@ -28,14 +27,10 @@ func (l *Lexer) readChar() {
 	l.readPosition += 1
 }
 
-func newToken(tokenType token.TokenType, char rune) token.Token {
-	return token.Token{Type: tokenType, Literal: string(char)}
-}
-
 // reads keywords and user-defined identifiers
 func (l *Lexer) lexIdentifier() string {
 	position := l.position
-	for unicode.IsLetter(l.char) {
+	for isLetter(l.char) {
 		l.readChar()
 	}
 	return l.input[position:l.position]
@@ -44,7 +39,7 @@ func (l *Lexer) lexIdentifier() string {
 // reads a number until there are no digit left
 func (l *Lexer) lexNumber() string {
 	startPos := l.position
-	for unicode.IsDigit(l.char) {
+	for isDigit(l.char) {
 		l.readChar()
 	}
 	return l.input[startPos:l.position]
@@ -63,35 +58,50 @@ func (l *Lexer) NextToken() token.Token {
 	l.skipWhiteSpace()
 
 	switch l.char {
+	// operator cases
 	case '=':
 		item = newToken(token.ASSIGN, l.char)
+	case '+':
+		item = newToken(token.PLUS, l.char)
+	case '-':
+		item = newToken(token.MINUS, l.char)
+	case '!':
+		item = newToken(token.BANG, l.char)
+	case '*':
+		item = newToken(token.ASTERISK, l.char)
+	case '/':
+		item = newToken(token.SLASH, l.char)
+	case '<':
+		item = newToken(token.LT, l.char)
+	case '>':
+		item = newToken(token.RT, l.char)
+	// delimiter cases
+	case ',':
+		item = newToken(token.COMMA, l.char)
 	case ';':
 		item = newToken(token.SEMICOLON, l.char)
 	case '(':
 		item = newToken(token.LPAREN, l.char)
 	case ')':
 		item = newToken(token.RPAREN, l.char)
-	case ',':
-		item = newToken(token.COMMA, l.char)
-	case '+':
-		item = newToken(token.PLUS, l.char)
 	case '{':
 		item = newToken(token.LBRACE, l.char)
 	case '}':
 		item = newToken(token.RBRACE, l.char)
 	case '\n':
 		item = newToken(token.NEWLINE, l.char)
+	// no more item to lex
 	case 0:
 		item.Literal = ""
 		item.Type = token.EOF
+	// numbers, identifiers, keywords
 	default:
-		// might break for _ ! \
-		if unicode.IsLetter(l.char) {
+		if isLetter(l.char) {
 			item.Literal = l.lexIdentifier()
 			item.Type = token.LookupIdent(item.Literal)
 			return item
 		}
-		if unicode.IsDigit(l.char) {
+		if isDigit(l.char) {
 			item.Literal = l.lexNumber()
 			item.Type = token.INT
 			return item
@@ -101,4 +111,16 @@ func (l *Lexer) NextToken() token.Token {
 
 	l.readChar()
 	return item
+}
+
+func isLetter(char rune) bool {
+	return 'a' <= char && char <= 'z' || 'A' <= char && char <= 'Z' || char == '!'
+}
+
+func isDigit(char rune) bool {
+	return '0' <= char && char <= '9'
+}
+
+func newToken(tokenType token.TokenType, char rune) token.Token {
+	return token.Token{Type: tokenType, Literal: string(char)}
 }
