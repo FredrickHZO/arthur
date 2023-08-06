@@ -76,28 +76,51 @@ func (l *Lexer) NextToken() token.Token {
 	// operator cases
 	case '=':
 		if l.peek() == '=' {
-			item.Literal = "=="
-			item.Type = token.EQ
+			item = newCompToken(token.EQ, "==")
 			l.readChar()
 		} else {
 			item = newToken(token.ASSIGN, l.char)
 		}
 	case '+':
-		item = newToken(token.PLUS, l.char)
+		if l.peek() == '+' {
+			item = newCompToken(token.INCREMENET, "++")
+			l.readChar()
+		} else if l.peek() == '=' {
+			item = newCompToken(token.PLUS_EQ, "+=")
+			l.readChar()
+		} else {
+			item = newToken(token.PLUS, l.char)
+		}
 	case '-':
-		item = newToken(token.MINUS, l.char)
+		if l.peek() == '-' {
+			item = newCompToken(token.DECREMENT, "--")
+			l.readChar()
+		} else if l.peek() == '=' {
+			item = newCompToken(token.MINUS_EQ, "-=")
+			l.readChar()
+		} else {
+			item = newToken(token.MINUS, l.char)
+		}
 	case '!':
 		if l.peek() == '=' {
-			item.Literal = "!="
-			item.Type = token.NOT_EQ
+			item = newCompToken(token.NOT_EQ, "!=")
 			l.readChar()
 		} else {
 			item = newToken(token.BANG, l.char)
 		}
 	case '*':
-		item = newToken(token.ASTERISK, l.char)
+		if l.peek() == '=' {
+			item = newCompToken(token.ASTERISK_EQ, "*=")
+			l.readChar()
+		} else {
+			item = newToken(token.ASTERISK, l.char)
+		}
 	case '/':
-		item = newToken(token.SLASH, l.char)
+		if l.peek() == '=' {
+			item = newCompToken(token.SLASH_EQ, "/=")
+		} else {
+			item = newToken(token.SLASH, l.char)
+		}
 	case '<':
 		item = newToken(token.LT, l.char)
 	case '>':
@@ -148,6 +171,10 @@ func isDigit(char rune) bool {
 	return '0' <= char && char <= '9'
 }
 
-func newToken(tokenType token.TokenType, char rune) token.Token {
-	return token.Token{Type: tokenType, Literal: string(char)}
+func newToken(tt token.TokenType, char rune) token.Token {
+	return token.Token{Type: tt, Literal: string(char)}
+}
+
+func newCompToken(tt token.TokenType, s string) token.Token {
+	return token.Token{Type: tt, Literal: s}
 }
