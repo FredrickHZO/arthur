@@ -17,6 +17,13 @@ func NewLexer(input string) *Lexer {
 	return l
 }
 
+func (l *Lexer) peek() rune {
+	if l.readPosition >= len(l.input) {
+		return 0
+	}
+	return rune(l.input[l.readPosition])
+}
+
 func (l *Lexer) readChar() {
 	if l.readPosition >= len(l.input) {
 		l.char = 0
@@ -30,7 +37,7 @@ func (l *Lexer) readChar() {
 // reads keywords and user-defined identifiers
 func (l *Lexer) lexIdentifier() string {
 	position := l.position
-	for isLetter(l.char) {
+	for isLetter(l.char) || isDigit(l.char) {
 		if l.position == len(l.input)-1 {
 			l.position = l.readPosition
 			break
@@ -68,13 +75,25 @@ func (l *Lexer) NextToken() token.Token {
 	switch l.char {
 	// operator cases
 	case '=':
-		item = newToken(token.ASSIGN, l.char)
+		if l.peek() == '=' {
+			item.Literal = "=="
+			item.Type = token.EQ
+			l.readChar()
+		} else {
+			item = newToken(token.ASSIGN, l.char)
+		}
 	case '+':
 		item = newToken(token.PLUS, l.char)
 	case '-':
 		item = newToken(token.MINUS, l.char)
 	case '!':
-		item = newToken(token.BANG, l.char)
+		if l.peek() == '=' {
+			item.Literal = "!="
+			item.Type = token.NOT_EQ
+			l.readChar()
+		} else {
+			item = newToken(token.BANG, l.char)
+		}
 	case '*':
 		item = newToken(token.ASTERISK, l.char)
 	case '/':
