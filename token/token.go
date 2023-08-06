@@ -16,6 +16,8 @@ const (
 	IDENT   = "IDENT"
 	INT     = "INT"
 	// operators
+	EQ       = "=="
+	NOT_EQ   = "!="
 	ASSIGN   = "="
 	PLUS     = "+"
 	MINUS    = "-"
