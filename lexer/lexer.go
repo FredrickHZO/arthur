@@ -90,7 +90,7 @@ func (l *Lexer) Tokenize() token.Token {
 	case '+':
 		next := l.peek()
 		if next == '+' {
-			item = l.twoCharToken(token.INCREMENET)
+			item = l.twoCharToken(token.INCREMENT)
 		} else if next == '=' {
 			item = l.twoCharToken(token.PLUS_EQ)
 		} else {
