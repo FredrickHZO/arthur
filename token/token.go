@@ -20,7 +20,7 @@ const (
 	NOT_EQ      = "!="
 	ASSIGN      = "="
 	PLUS        = "+"
-	INCREMENET  = "++"
+	INCREMENT   = "++"
 	PLUS_EQ     = "+="
 	MINUS       = "-"
 	DECREMENT   = "--"
