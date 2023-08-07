@@ -5,143 +5,145 @@ import (
 )
 
 type Lexer struct {
-	input        string
-	position     int
-	readPosition int
-	char         rune
+	in   string
+	pos  int
+	char rune
 }
+
+const EOF = -1
 
 func NewLexer(input string) *Lexer {
-	l := &Lexer{input: input}
-	l.readChar()
-	return l
-}
-
-func (l *Lexer) peek() rune {
-	if l.readPosition >= len(l.input) {
-		return 0
+	return &Lexer{
+		in:   input,
+		pos:  0,
+		char: rune(input[0]),
 	}
-	return rune(l.input[l.readPosition])
 }
 
-func (l *Lexer) readChar() {
-	if l.readPosition >= len(l.input) {
-		l.char = 0
+// return the next item in the input string of the one being lexed
+func (l *Lexer) peek() rune {
+	if (l.pos + 1) >= len(l.in) {
+		return EOF
+	}
+	return rune(l.in[l.pos+1])
+}
+
+// advances one position in the input string
+func (l *Lexer) next() {
+	l.pos += 1
+	if l.pos >= len(l.in) {
+		l.char = EOF
 		return
 	}
-	l.char = rune(l.input[l.readPosition])
-	l.position = l.readPosition
-	l.readPosition += 1
+	l.char = rune(l.in[l.pos])
 }
 
 // reads keywords and user-defined identifiers
 func (l *Lexer) lexIdentifier() string {
-	position := l.position
+	startPos := l.pos
 	for isLetter(l.char) || isDigit(l.char) {
-		if l.position == len(l.input)-1 {
-			l.position = l.readPosition
-			break
-		}
-		l.readChar()
+		l.next()
 	}
-	return l.input[position:l.position]
+	// prevents bugs in the case an identifier is the last item
+	// to tokenize in the string
+	if l.pos >= (len(l.in) - 1) {
+		l.pos += 1
+	}
+	return l.in[startPos:l.pos]
 }
 
 // reads a number until there are no digit left
 func (l *Lexer) lexNumber() string {
-	startPos := l.position
+	startPos := l.pos
 	for isDigit(l.char) {
-		if l.position == len(l.input)-1 {
-			l.position = l.readPosition
-			break
-		}
-		l.readChar()
+		l.next()
 	}
-	return l.input[startPos:l.position]
+	// prevents bugs in the case a number is the last item
+	// to tokenize in the string
+	if l.pos >= (len(l.in) - 1) {
+		l.pos += 1
+	}
+	return l.in[startPos:l.pos]
 }
 
 // doesn't skip newline since it replaces semicolons
-func (l *Lexer) skipWhiteSpace() {
+func (l *Lexer) skipSpace() {
 	for l.char == ' ' || l.char == '\t' || l.char == '\r' {
-		l.readChar()
+		l.next()
 	}
 }
 
-func (l *Lexer) NextToken() token.Token {
+// generates the correct token for the item being lexed
+func (l *Lexer) Tokenize() token.Token {
 	var item token.Token
 
-	l.skipWhiteSpace()
+	l.skipSpace()
 
 	switch l.char {
 	// operator cases
 	case '=':
 		if l.peek() == '=' {
-			item = newCompToken(token.EQ, "==")
-			l.readChar()
+			item = l.twoCharToken(token.EQ)
 		} else {
-			item = newToken(token.ASSIGN, l.char)
+			item = l.token(token.ASSIGN)
 		}
 	case '+':
-		if l.peek() == '+' {
-			item = newCompToken(token.INCREMENET, "++")
-			l.readChar()
-		} else if l.peek() == '=' {
-			item = newCompToken(token.PLUS_EQ, "+=")
-			l.readChar()
+		next := l.peek()
+		if next == '+' {
+			item = l.twoCharToken(token.INCREMENET)
+		} else if next == '=' {
+			item = l.twoCharToken(token.PLUS_EQ)
 		} else {
-			item = newToken(token.PLUS, l.char)
+			item = l.token(token.PLUS)
 		}
 	case '-':
-		if l.peek() == '-' {
-			item = newCompToken(token.DECREMENT, "--")
-			l.readChar()
-		} else if l.peek() == '=' {
-			item = newCompToken(token.MINUS_EQ, "-=")
-			l.readChar()
+		next := l.peek()
+		if next == '-' {
+			item = l.twoCharToken(token.DECREMENT)
+		} else if next == '=' {
+			item = l.twoCharToken(token.MINUS_EQ)
 		} else {
-			item = newToken(token.MINUS, l.char)
+			item = l.token(token.MINUS)
 		}
 	case '!':
 		if l.peek() == '=' {
-			item = newCompToken(token.NOT_EQ, "!=")
-			l.readChar()
+			item = l.twoCharToken(token.NOT_EQ)
 		} else {
-			item = newToken(token.BANG, l.char)
+			item = l.token(token.BANG)
 		}
 	case '*':
 		if l.peek() == '=' {
-			item = newCompToken(token.ASTERISK_EQ, "*=")
-			l.readChar()
+			item = l.twoCharToken(token.ASTERISK_EQ)
 		} else {
-			item = newToken(token.ASTERISK, l.char)
+			item = l.token(token.ASTERISK)
 		}
 	case '/':
 		if l.peek() == '=' {
-			item = newCompToken(token.SLASH_EQ, "/=")
+			item = l.twoCharToken(token.SLASH_EQ)
 		} else {
-			item = newToken(token.SLASH, l.char)
+			item = l.token(token.SLASH)
 		}
 	case '<':
-		item = newToken(token.LT, l.char)
+		item = l.token(token.LT)
 	case '>':
-		item = newToken(token.RT, l.char)
+		item = l.token(token.RT)
 	// delimiter cases
 	case ',':
-		item = newToken(token.COMMA, l.char)
+		item = l.token(token.COMMA)
 	case ';':
-		item = newToken(token.SEMICOLON, l.char)
+		item = l.token(token.SEMICOLON)
 	case '(':
-		item = newToken(token.LPAREN, l.char)
+		item = l.token(token.LPAREN)
 	case ')':
-		item = newToken(token.RPAREN, l.char)
+		item = l.token(token.RPAREN)
 	case '{':
-		item = newToken(token.LBRACE, l.char)
+		item = l.token(token.LBRACE)
 	case '}':
-		item = newToken(token.RBRACE, l.char)
+		item = l.token(token.RBRACE)
 	case '\n':
-		item = newToken(token.NEWLINE, l.char)
+		item = l.token(token.NEWLINE)
 	// no more item to lex
-	case 0:
+	case EOF:
 		item.Literal = ""
 		item.Type = token.EOF
 	// numbers, identifiers, keywords
@@ -156,25 +158,37 @@ func (l *Lexer) NextToken() token.Token {
 			item.Type = token.INT
 			return item
 		}
-		item = newToken(token.ILLEGAL, l.char)
+		item = l.token(token.ILLEGAL)
 	}
 
-	l.readChar()
+	l.next()
 	return item
 }
 
 func isLetter(char rune) bool {
-	return 'a' <= char && char <= 'z' || 'A' <= char && char <= 'Z' || char == '!'
+	return 'a' <= char && char <= 'z' ||
+		'A' <= char && char <= 'Z' ||
+		char == '!' || char == '_'
 }
 
 func isDigit(char rune) bool {
 	return '0' <= char && char <= '9'
 }
 
-func newToken(tt token.TokenType, char rune) token.Token {
-	return token.Token{Type: tt, Literal: string(char)}
+// returns a single character token
+func (l *Lexer) token(tt token.TokenType) token.Token {
+	return token.Token{
+		Type:    tt,
+		Literal: string(l.char),
+	}
 }
 
-func newCompToken(tt token.TokenType, s string) token.Token {
-	return token.Token{Type: tt, Literal: s}
+// returns a two-character token
+func (l *Lexer) twoCharToken(tt token.TokenType) token.Token {
+	item := token.Token{
+		Type:    tt,
+		Literal: l.in[l.pos : l.pos+2],
+	}
+	l.next()
+	return item
 }
