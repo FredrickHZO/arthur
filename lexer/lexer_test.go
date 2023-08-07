@@ -92,7 +92,7 @@ func TestNextToken(t *testing.T) {
 	l := NewLexer(input)
 
 	for i, item := range tests {
-		tkn := l.NextToken()
+		tkn := l.Tokenize()
 
 		if tkn.Type != item.expectedType {
 			t.Fatalf("tests[%d] - wrong token type, expected=%q, got=%q",
