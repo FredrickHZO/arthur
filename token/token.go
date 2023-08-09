@@ -15,6 +15,7 @@ const (
 	EOF     = "EOF"
 	IDENT   = "IDENT"
 	INT     = "INT"
+	FLOAT   = "FLOAT"
 	// operators
 	EQ          = "=="
 	NOT_EQ      = "!="
