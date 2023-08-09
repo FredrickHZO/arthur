@@ -2,184 +2,188 @@ package lexer
 
 import (
 	"arthur/token"
+	"unicode"
 )
 
 type Lexer struct {
 	in   string
 	pos  int
-	char rune
+	read int
 }
 
 const EOF = -1
 
+// creates a new lexer with the input string and the first character
 func NewLexer(input string) *Lexer {
 	return &Lexer{
 		in:   input,
 		pos:  0,
-		char: rune(input[0]),
+		read: 0,
 	}
 }
 
 // return the next item in the input string of the one being lexed
 func (l *Lexer) peek() rune {
-	if (l.pos + 1) >= len(l.in) {
+	if l.read >= len(l.in) {
 		return EOF
 	}
-	return rune(l.in[l.pos+1])
+	return rune(l.in[l.read])
 }
 
 // advances one position in the input string
-func (l *Lexer) next() {
-	l.pos += 1
-	if l.pos >= len(l.in) {
-		l.char = EOF
-		return
+func (l *Lexer) next() rune {
+	if l.read >= len(l.in) {
+		return EOF
 	}
-	l.char = rune(l.in[l.pos])
+	l.pos = l.read
+	l.read += 1
+	return rune(l.in[l.pos])
+}
+
+// goes back one position in the input string
+func (l *Lexer) backup() rune {
+	l.read = l.pos
+	l.pos -= 1
+	return rune(l.in[l.read])
 }
 
 // reads keywords and user-defined identifiers
-func (l *Lexer) lexIdentifier() string {
-	startPos := l.pos
-	for isLetter(l.char) || isDigit(l.char) {
-		l.next()
+func (l *Lexer) lexIdentifier(char rune) string {
+	start := l.pos
+	for isLetter(char) {
+		char = l.next()
 	}
-	// prevents bugs in the case an identifier is the last item
-	// to tokenize in the string
-	if l.pos >= (len(l.in) - 1) {
-		l.pos += 1
-	}
-	return l.in[startPos:l.pos]
+	str := l.in[start:l.pos]
+	l.backup()
+	return str
 }
 
 // reads a number until there are no digit left
-func (l *Lexer) lexNumber() string {
+func (l *Lexer) lexNumber(char rune) string {
 	startPos := l.pos
-	for isDigit(l.char) {
-		l.next()
+	for isDigit(char) {
+		char = l.next()
 	}
-	// prevents bugs in the case a number is the last item
-	// to tokenize in the string
-	if l.pos >= (len(l.in) - 1) {
-		l.pos += 1
-	}
-	return l.in[startPos:l.pos]
-}
-
-// doesn't skip newline since it replaces semicolons
-func (l *Lexer) skipSpace() {
-	for l.char == ' ' || l.char == '\t' || l.char == '\r' {
-		l.next()
-	}
+	str := l.in[startPos:l.pos]
+	l.backup()
+	return str
 }
 
 // generates the correct token for the item being lexed
 func (l *Lexer) Tokenize() token.Token {
-	var item token.Token
+	r := l.next()
 
-	l.skipSpace()
+	for isSpace(r) {
+		r = l.next()
+	}
 
-	switch l.char {
+	switch r {
 	// operator cases
 	case '=':
 		if l.peek() == '=' {
-			item = l.twoCharToken(token.EQ)
+			return l.twoCharToken(token.EQ)
 		} else {
-			item = l.token(token.ASSIGN)
+			return l.token(token.ASSIGN)
 		}
 	case '+':
 		next := l.peek()
+		var t token.Token
 		if next == '+' {
-			item = l.twoCharToken(token.INCREMENT)
+			t = l.twoCharToken(token.INCREMENT)
 		} else if next == '=' {
-			item = l.twoCharToken(token.PLUS_EQ)
+			t = l.twoCharToken(token.PLUS_EQ)
 		} else {
-			item = l.token(token.PLUS)
+			t = l.token(token.PLUS)
 		}
+		return t
 	case '-':
 		next := l.peek()
+		var t token.Token
 		if next == '-' {
-			item = l.twoCharToken(token.DECREMENT)
+			t = l.twoCharToken(token.DECREMENT)
 		} else if next == '=' {
-			item = l.twoCharToken(token.MINUS_EQ)
+			t = l.twoCharToken(token.MINUS_EQ)
 		} else {
-			item = l.token(token.MINUS)
+			t = l.token(token.MINUS)
 		}
+		return t
 	case '!':
 		if l.peek() == '=' {
-			item = l.twoCharToken(token.NOT_EQ)
+			return l.twoCharToken(token.NOT_EQ)
 		} else {
-			item = l.token(token.BANG)
+			return l.token(token.BANG)
 		}
 	case '*':
 		if l.peek() == '=' {
-			item = l.twoCharToken(token.ASTERISK_EQ)
+			return l.twoCharToken(token.ASTERISK_EQ)
 		} else {
-			item = l.token(token.ASTERISK)
+			return l.token(token.ASTERISK)
 		}
 	case '/':
 		if l.peek() == '=' {
-			item = l.twoCharToken(token.SLASH_EQ)
+			return l.twoCharToken(token.SLASH_EQ)
 		} else {
-			item = l.token(token.SLASH)
+			return l.token(token.SLASH)
 		}
 	case '<':
-		item = l.token(token.LT)
+		return l.token(token.LT)
 	case '>':
-		item = l.token(token.RT)
+		return l.token(token.RT)
 	// delimiter cases
 	case ',':
-		item = l.token(token.COMMA)
+		return l.token(token.COMMA)
 	case ';':
-		item = l.token(token.SEMICOLON)
+		return l.token(token.SEMICOLON)
 	case '(':
-		item = l.token(token.LPAREN)
+		return l.token(token.LPAREN)
 	case ')':
-		item = l.token(token.RPAREN)
+		return l.token(token.RPAREN)
 	case '{':
-		item = l.token(token.LBRACE)
+		return l.token(token.LBRACE)
 	case '}':
-		item = l.token(token.RBRACE)
+		return l.token(token.RBRACE)
 	case '\n':
-		item = l.token(token.NEWLINE)
+		return l.token(token.NEWLINE)
 	// no more item to lex
 	case EOF:
-		item.Literal = ""
-		item.Type = token.EOF
+		return l.token(token.EOF)
 	// numbers, identifiers, keywords
 	default:
-		if isLetter(l.char) {
-			item.Literal = l.lexIdentifier()
-			item.Type = token.LookupIdent(item.Literal)
-			return item
+		if isLetter(r) {
+			ident := l.lexIdentifier(r)
+			return token.Token{
+				Literal: ident,
+				Type:    token.LookupIdent(ident),
+			}
 		}
-		if isDigit(l.char) {
-			item.Literal = l.lexNumber()
-			item.Type = token.INT
-			return item
+		if isDigit(r) {
+			return token.Token{
+				Literal: l.lexNumber(r),
+				Type:    token.INT,
+			}
 		}
-		item = l.token(token.ILLEGAL)
+		return l.token(token.ILLEGAL)
 	}
-
-	l.next()
-	return item
 }
 
-func isLetter(char rune) bool {
-	return 'a' <= char && char <= 'z' ||
-		'A' <= char && char <= 'Z' ||
-		char == '!' || char == '_'
+// doesn't skip newline since it replaces semicolons
+func isSpace(r rune) bool {
+	return r == ' ' || r == '\t' || r == '\r'
 }
 
-func isDigit(char rune) bool {
-	return '0' <= char && char <= '9'
+func isLetter(r rune) bool {
+	return unicode.IsLetter(r) || r == '_'
+}
+
+func isDigit(r rune) bool {
+	return unicode.IsNumber(r) || r == '-'
 }
 
 // returns a single character token
 func (l *Lexer) token(tt token.TokenType) token.Token {
 	return token.Token{
 		Type:    tt,
-		Literal: string(l.char),
+		Literal: string(l.in[l.pos]),
 	}
 }
 
@@ -187,7 +191,7 @@ func (l *Lexer) token(tt token.TokenType) token.Token {
 func (l *Lexer) twoCharToken(tt token.TokenType) token.Token {
 	item := token.Token{
 		Type:    tt,
-		Literal: l.in[l.pos : l.pos+2],
+		Literal: l.in[l.pos : l.read+1],
 	}
 	l.next()
 	return item
