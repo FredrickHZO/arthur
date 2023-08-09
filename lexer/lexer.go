@@ -9,6 +9,7 @@ type Lexer struct {
 	in   string
 	pos  int
 	read int
+	char rune
 }
 
 const EOF = -1
@@ -19,6 +20,7 @@ func NewLexer(input string) *Lexer {
 		in:   input,
 		pos:  0,
 		read: 0,
+		char: rune(input[0]),
 	}
 }
 
@@ -31,53 +33,65 @@ func (l *Lexer) peek() rune {
 }
 
 // advances one position in the input string
-func (l *Lexer) next() rune {
+func (l *Lexer) next() {
 	if l.read >= len(l.in) {
-		return EOF
+		l.char = EOF
+		return
 	}
+	l.char = rune(l.in[l.read])
 	l.pos = l.read
 	l.read += 1
-	return rune(l.in[l.pos])
 }
 
 // goes back one position in the input string
-func (l *Lexer) backup() rune {
+func (l *Lexer) backup() {
 	l.read = l.pos
 	l.pos -= 1
-	return rune(l.in[l.read])
+	l.char = rune(l.in[l.read])
 }
 
 // reads keywords and user-defined identifiers
-func (l *Lexer) lexIdentifier(char rune) string {
+func (l *Lexer) lexIdentifier() string {
 	start := l.pos
-	for isLetter(char) {
-		char = l.next()
+	for isLetter(l.peek()) {
+		l.next()
 	}
-	str := l.in[start:l.pos]
-	l.backup()
+	str := l.in[start:l.read]
 	return str
 }
 
-// reads a number until there are no digit left
-func (l *Lexer) lexNumber(char rune) string {
-	startPos := l.pos
-	for isDigit(char) {
-		char = l.next()
+func (l *Lexer) consumeDigits() {
+	for isDigit(l.char) {
+		l.next()
 	}
-	str := l.in[startPos:l.pos]
-	l.backup()
-	return str
+}
+
+// generates the correct type of token for numbers
+func (l *Lexer) lexNumber() token.Token {
+	start := l.pos
+	var t token.TokenType = token.INT
+	l.consumeDigits()
+
+	// checks if it is a float
+	if l.char == '.' && !isDigit(l.peek()) {
+		l.backup()
+	} else if l.char == '.' && isDigit(l.peek()) {
+		t = token.FLOAT
+		l.next()
+		l.consumeDigits()
+	}
+	return token.Token{Literal: l.in[start:l.read], Type: t}
 }
 
 // generates the correct token for the item being lexed
 func (l *Lexer) Tokenize() token.Token {
-	r := l.next()
+	l.next()
 
-	for isSpace(r) {
-		r = l.next()
+	for isSpace(l.char) {
+		l.next()
 	}
 
-	switch r {
+	switch l.char {
 	// operator cases
 	case '=':
 		if l.peek() == '=' {
@@ -146,21 +160,21 @@ func (l *Lexer) Tokenize() token.Token {
 		return l.token(token.NEWLINE)
 	// no more item to lex
 	case EOF:
-		return l.token(token.EOF)
+		return token.Token{
+			Literal: "",
+			Type:    token.EOF,
+		}
 	// numbers, identifiers, keywords
 	default:
-		if isLetter(r) {
-			ident := l.lexIdentifier(r)
+		if isLetter(l.char) {
+			ident := l.lexIdentifier()
 			return token.Token{
 				Literal: ident,
 				Type:    token.LookupIdent(ident),
 			}
 		}
-		if isDigit(r) {
-			return token.Token{
-				Literal: l.lexNumber(r),
-				Type:    token.INT,
-			}
+		if isDigit(l.char) {
+			return l.lexNumber()
 		}
 		return l.token(token.ILLEGAL)
 	}
