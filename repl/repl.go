@@ -22,10 +22,15 @@ func Init(in io.Reader, out io.Writer) {
 		line := scanner.Text()
 
 		items := lexer.Lex(line)
-		item := <-items
-		if item.Type == token.EOF {
-			break
+		for item := range items {
+			if item.Type == token.EOF {
+				break
+			}
+			if item.Literal == "__exit" {
+				fmt.Println("\nGoodbye!")
+				return
+			}
+			fmt.Fprintf(out, "%+v\n", item)
 		}
-		fmt.Fprintf(out, "%+v\n", item)
 	}
 }
