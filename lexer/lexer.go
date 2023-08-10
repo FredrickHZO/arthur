@@ -190,7 +190,7 @@ func isLetter(r rune) bool {
 }
 
 func isDigit(r rune) bool {
-	return unicode.IsNumber(r) || r == '-'
+	return unicode.IsNumber(r)
 }
 
 // returns a single character token
