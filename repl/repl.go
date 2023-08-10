@@ -8,7 +8,7 @@ import (
 	"io"
 )
 
-const PROMPT = ">> "
+const PROMPT = "\n>> "
 
 func Init(in io.Reader, out io.Writer) {
 	scanner := bufio.NewScanner(in)
@@ -19,13 +19,13 @@ func Init(in io.Reader, out io.Writer) {
 		if !scanned {
 			return
 		}
-
 		line := scanner.Text()
-		l := lexer.NewLexer(line)
 
-		for item := l.Tokenize(); item.Type != token.EOF; item = l.Tokenize() {
-			fmt.Fprintf(out, "%+v\n", item)
+		items := lexer.Lex(line)
+		item := <-items
+		if item.Type == token.EOF {
+			break
 		}
-		fmt.Println()
+		fmt.Fprintf(out, "%+v\n", item)
 	}
 }
