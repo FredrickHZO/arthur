@@ -53,7 +53,7 @@ func (l *Lexer) backup() {
 // reads keywords and user-defined identifiers
 func (l *Lexer) lexIdentifier() string {
 	start := l.pos
-	for isLetter(l.peek()) {
+	for !isSpace(l.peek()) {
 		l.next()
 	}
 	str := l.in[start:l.read]
