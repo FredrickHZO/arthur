@@ -13,7 +13,7 @@ func TestNextToken(t *testing.T) {
 			x + y
 		}
 
-		let result = add(five, five)
+		let result = add(five, 5)
 		pippo`
 
 	tests := []struct {
@@ -53,7 +53,7 @@ func TestNextToken(t *testing.T) {
 		{token.LPAREN, "("},
 		{token.IDENT, "five"},
 		{token.COMMA, ","},
-		{token.IDENT, "five"},
+		{token.INT, "5"},
 		{token.RPAREN, ")"},
 		{token.NEWLINE, "\n"},
 		{token.IDENT, "pippo"},

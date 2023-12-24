@@ -53,8 +53,10 @@ func (l *Lexer) backup() {
 // reads keywords and user-defined identifiers
 func (l *Lexer) lexIdentifier() string {
 	start := l.pos
-	for !isSpace(l.peek()) {
+	peek := l.peek()
+	for isLetter(peek) || isDigit(peek) {
 		l.next()
+		peek = l.peek()
 	}
 	str := l.in[start:l.read]
 	return str
@@ -79,6 +81,8 @@ func (l *Lexer) lexNumber() token.Token {
 		t = token.FLOAT
 		l.next()
 		l.consumeDigits()
+		l.backup()
+	} else {
 		l.backup()
 	}
 	return token.Token{Literal: l.in[start:l.read], Type: t}
