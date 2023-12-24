@@ -2,6 +2,7 @@ package lexer
 
 import (
 	"arthur/token"
+	"strings"
 	"unicode"
 )
 
@@ -62,31 +63,19 @@ func (l *Lexer) lexIdentifier() string {
 	return str
 }
 
-// advances in the input string till the character it finds is not a digit
-func (l *Lexer) consumeDigits() {
-	for isDigit(l.char) {
-		l.next()
-	}
-}
-
-// generates the correct type of token for numbers
-func (l *Lexer) lexNumber() token.Token {
+// reads an int or float number
+func (l *Lexer) lexNumber() string {
 	start := l.pos
-	var t token.TokenType = token.INT
-	l.consumeDigits()
-
-	// checks if it is a float
-	if l.char == '.' && !isDigit(l.peek()) {
-		l.backup()
-	} else if l.char == '.' && isDigit(l.peek()) {
-		t = token.FLOAT
+	peek := l.peek()
+	for isDigit(peek) || peek == '.' {
 		l.next()
-		l.consumeDigits()
-		l.backup()
-	} else {
-		l.backup()
+		if l.char == '.' && !isDigit(l.peek()) {
+			l.backup()
+			break
+		}
+		peek = l.peek()
 	}
-	return token.Token{Literal: l.in[start:l.read], Type: t}
+	return l.in[start:l.read]
 }
 
 // generates the correct token for the item being lexed
@@ -192,7 +181,17 @@ func (l *Lexer) Tokenize() token.Token {
 			}
 		}
 		if isDigit(l.char) {
-			return l.lexNumber()
+			num := l.lexNumber()
+			if strings.Contains(num, ".") {
+				return token.Token{
+					Literal: num,
+					Type:    token.FLOAT,
+				}
+			}
+			return token.Token{
+				Literal: num,
+				Type:    token.FLOAT,
+			}
 		}
 		return l.token(token.ILLEGAL)
 	}
@@ -210,7 +209,7 @@ func isLetter(r rune) bool {
 
 // checks if the current character in the input string is a digit
 func isDigit(r rune) bool {
-	return unicode.IsNumber(r)
+	return unicode.IsDigit(r)
 }
 
 // returns a single character token
