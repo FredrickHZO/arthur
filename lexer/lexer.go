@@ -62,6 +62,7 @@ func (l *Lexer) lexIdentifier() string {
 	return str
 }
 
+// advances in the input string till the character it finds is not a digit
 func (l *Lexer) consumeDigits() {
 	for isDigit(l.char) {
 		l.next()
@@ -104,71 +105,83 @@ func (l *Lexer) Tokenize() token.Token {
 		} else {
 			return l.token(token.ASSIGN)
 		}
+
 	case '+':
 		next := l.peek()
-		var t token.Token
 		if next == '+' {
-			t = l.twoCharToken(token.INCREMENT)
+			return l.twoCharToken(token.INCREMENT)
 		} else if next == '=' {
-			t = l.twoCharToken(token.PLUS_EQ)
+			return l.twoCharToken(token.PLUS_EQ)
 		} else {
-			t = l.token(token.PLUS)
+			return l.token(token.PLUS)
 		}
-		return t
+
 	case '-':
 		next := l.peek()
-		var t token.Token
 		if next == '-' {
-			t = l.twoCharToken(token.DECREMENT)
+			return l.twoCharToken(token.DECREMENT)
 		} else if next == '=' {
-			t = l.twoCharToken(token.MINUS_EQ)
+			return l.twoCharToken(token.MINUS_EQ)
 		} else {
-			t = l.token(token.MINUS)
+			return l.token(token.MINUS)
 		}
-		return t
+
 	case '!':
 		if l.peek() == '=' {
 			return l.twoCharToken(token.NOT_EQ)
 		} else {
 			return l.token(token.BANG)
 		}
+
 	case '*':
 		if l.peek() == '=' {
 			return l.twoCharToken(token.ASTERISK_EQ)
 		} else {
 			return l.token(token.ASTERISK)
 		}
+
 	case '/':
 		if l.peek() == '=' {
 			return l.twoCharToken(token.SLASH_EQ)
 		} else {
 			return l.token(token.SLASH)
 		}
+
 	case '<':
 		return l.token(token.LT)
+
 	case '>':
 		return l.token(token.RT)
+
 	// delimiter cases
 	case ',':
 		return l.token(token.COMMA)
+
 	case ';':
 		return l.token(token.SEMICOLON)
+
 	case '(':
 		return l.token(token.LPAREN)
+
 	case ')':
 		return l.token(token.RPAREN)
+
 	case '{':
 		return l.token(token.LBRACE)
+
 	case '}':
 		return l.token(token.RBRACE)
+
 	case '\n':
 		return l.token(token.NEWLINE)
+
 	// no more item to lex
 	case EOF:
 		return token.Token{
 			Literal: "",
 			Type:    token.EOF,
 		}
+
 	// numbers, identifiers, keywords
 	default:
 		if isLetter(l.char) {
@@ -190,10 +203,12 @@ func isSpace(r rune) bool {
 	return r == ' ' || r == '\t' || r == '\r'
 }
 
+// checks if the character in the input string is a letter or underscore
 func isLetter(r rune) bool {
 	return unicode.IsLetter(r) || r == '_'
 }
 
+// checks if the current character in the input string is a digit
 func isDigit(r rune) bool {
 	return unicode.IsNumber(r)
 }
