@@ -79,6 +79,7 @@ func (l *Lexer) lexNumber() token.Token {
 		t = token.FLOAT
 		l.next()
 		l.consumeDigits()
+		l.backup()
 	}
 	return token.Token{Literal: l.in[start:l.read], Type: t}
 }
