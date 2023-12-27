@@ -54,10 +54,8 @@ func (l *Lexer) backup() {
 // reads keywords and user-defined identifiers
 func (l *Lexer) lexIdentifier() string {
 	start := l.pos
-	peek := l.peek()
-	for isLetter(peek) || isDigit(peek) {
+	for peek := l.peek(); isLetter(peek) || isDigit(peek); peek = l.peek() {
 		l.next()
-		peek = l.peek()
 	}
 	str := l.in[start:l.read]
 	return str
@@ -66,14 +64,12 @@ func (l *Lexer) lexIdentifier() string {
 // reads an int or float number
 func (l *Lexer) lexNumber() string {
 	start := l.pos
-	peek := l.peek()
-	for isDigit(peek) || peek == '.' {
+	for peek := l.peek(); isDigit(peek) || peek == '.'; peek = l.peek() {
 		l.next()
 		if l.char == '.' && !isDigit(l.peek()) {
 			l.backup()
 			break
 		}
-		peek = l.peek()
 	}
 	return l.in[start:l.read]
 }
@@ -190,7 +186,7 @@ func (l *Lexer) Tokenize() token.Token {
 			}
 			return token.Token{
 				Literal: num,
-				Type:    token.FLOAT,
+				Type:    token.INT,
 			}
 		}
 		return l.token(token.ILLEGAL)
