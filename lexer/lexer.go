@@ -25,6 +25,24 @@ func NewLexer(input string) *Lexer {
 	}
 }
 
+// returns a single character token
+func (l *Lexer) token(tt token.TokenType) token.Token {
+	return token.Token{
+		Type:    tt,
+		Literal: string(l.in[l.pos]),
+	}
+}
+
+// returns a two-character token
+func (l *Lexer) twoCharToken(tt token.TokenType) token.Token {
+	item := token.Token{
+		Type:    tt,
+		Literal: l.in[l.pos : l.read+1],
+	}
+	l.next()
+	return item
+}
+
 // return the next item in the input string of the one being lexed
 func (l *Lexer) peek() rune {
 	if l.read >= len(l.in) {
@@ -206,22 +224,4 @@ func isLetter(r rune) bool {
 // checks if the current character in the input string is a digit
 func isDigit(r rune) bool {
 	return unicode.IsDigit(r)
-}
-
-// returns a single character token
-func (l *Lexer) token(tt token.TokenType) token.Token {
-	return token.Token{
-		Type:    tt,
-		Literal: string(l.in[l.pos]),
-	}
-}
-
-// returns a two-character token
-func (l *Lexer) twoCharToken(tt token.TokenType) token.Token {
-	item := token.Token{
-		Type:    tt,
-		Literal: l.in[l.pos : l.read+1],
-	}
-	l.next()
-	return item
 }
