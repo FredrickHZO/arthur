@@ -1,9 +1,5 @@
 package ast
 
-import (
-	"arthur/token"
-)
-
 type Node interface {
 	TokenLiteral() string
 }
@@ -20,31 +16,6 @@ type Expression interface {
 
 type Program struct {
 	Statements []Statement
-}
-
-type Identifier struct {
-	Token token.Token
-	Value string
-}
-
-func (i *Identifier) expressionNode() {
-}
-
-func (i *Identifier) TokenLiteral() string {
-	return i.Token.Literal
-}
-
-type LetStatement struct {
-	Token token.Token
-	Name  *Identifier
-	Value Expression
-}
-
-func (ls *LetStatement) statementNode() {
-}
-
-func (ls *LetStatement) TokenLiteral() string {
-	return ls.Token.Literal
 }
 
 func (p *Program) TokenLiteral() string {
